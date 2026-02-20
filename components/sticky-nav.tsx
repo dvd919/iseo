@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Phone } from "lucide-react"
+import Image from "next/image"
 
 const navItems = [
   { label: "프로젝트", href: "#highlights" },
@@ -49,9 +50,13 @@ export function StickyNav() {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
         {/* Logo */}
         <a href="#hero" className="flex-shrink-0">
-          <span className={`text-lg font-black transition-colors ${scrolled ? "text-primary" : "text-[#ffffff]"}`}>
-            {"서전주(이서)빌리지"}
-          </span>
+          <Image
+            src="/logo.png"
+            alt="이서빌리지"
+            width={160}
+            height={48}
+            className={`h-10 w-auto transition-all duration-300 ${scrolled ? "invert" : ""}`}
+          />
         </a>
 
         {/* Nav items - hidden on mobile */}
