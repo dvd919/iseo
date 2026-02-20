@@ -1,17 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
+import { ZoomIn, ZoomOut, Maximize2, X } from "lucide-react"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
 
 export function LandPlot() {
   const { ref, isVisible } = useScrollReveal(0.1)
   const [scale, setScale] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const pendingScroll = useRef<{ left: number; top: number } | null>(null)
 
-  const zoomIn = () => setScale((prev) => Math.min(prev + 0.25, 3))
-  const zoomOut = () => setScale((prev) => Math.max(prev - 0.25, 0.5))
+  useEffect(() => { setMounted(true) }, [])
+
+  const zoom = (newScale: number) => {
+    const container = containerRef.current
+    if (container) {
+      const centerX = container.scrollLeft + container.clientWidth / 2
+      const centerY = container.scrollTop + container.clientHeight / 2
+      const factor = newScale / scale
+      pendingScroll.current = {
+        left: centerX * factor - container.clientWidth / 2,
+        top: centerY * factor - container.clientHeight / 2,
+      }
+    }
+    setScale(newScale)
+  }
+
+  useLayoutEffect(() => {
+    if (pendingScroll.current && containerRef.current) {
+      containerRef.current.scrollLeft = pendingScroll.current.left
+      containerRef.current.scrollTop = pendingScroll.current.top
+      pendingScroll.current = null
+    }
+  }, [scale])
 
   return (
     <section id="land-plot" className="py-24 md:py-32 bg-background">
@@ -34,7 +59,7 @@ export function LandPlot() {
           {/* Controls */}
           <div className="flex items-center justify-end gap-2 mb-4">
             <button
-              onClick={zoomOut}
+              onClick={() => zoom(Math.max(scale - 0.25, 0.5))}
               className="flex items-center justify-center w-10 h-10 rounded-lg bg-background border border-border hover:border-gold/50 text-foreground transition-colors"
               aria-label="축소"
             >
@@ -44,14 +69,14 @@ export function LandPlot() {
               {Math.round(scale * 100)}%
             </span>
             <button
-              onClick={zoomIn}
+              onClick={() => zoom(Math.min(scale + 0.25, 3))}
               className="flex items-center justify-center w-10 h-10 rounded-lg bg-background border border-border hover:border-gold/50 text-foreground transition-colors"
               aria-label="확대"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setIsFullscreen(!isFullscreen)}
+              onClick={() => setIsFullscreen(true)}
               className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground hover:bg-gold hover:text-dark-gray transition-colors"
               aria-label="전체화면"
             >
@@ -60,23 +85,8 @@ export function LandPlot() {
           </div>
 
           {/* Image container */}
-          <div
-            className={`relative overflow-auto rounded-2xl border border-border bg-[#f5f4f0] shadow-xl ${
-              isFullscreen ? "fixed inset-4 z-50" : "max-h-[700px]"
-            }`}
-          >
-            {isFullscreen && (
-              <button
-                onClick={() => setIsFullscreen(false)}
-                className="absolute top-4 right-4 z-10 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-gold hover:text-dark-gray transition-colors"
-              >
-                {"닫기"}
-              </button>
-            )}
-            <div
-              className="transition-transform duration-300 ease-out cursor-grab active:cursor-grabbing"
-              style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}
-            >
+          <div ref={containerRef} className="overflow-auto rounded-2xl border border-border bg-[#f5f4f0] shadow-xl max-h-[700px]">
+            <div style={{ width: `${scale * 100}%` }}>
               <Image
                 src="/images/land-plot-map.jpg"
                 alt="서전주(이서)빌리지 토지 구획도"
@@ -90,9 +100,29 @@ export function LandPlot() {
         </div>
       </div>
 
-      {/* Fullscreen overlay */}
-      {isFullscreen && (
-        <div className="fixed inset-0 z-40 bg-[#1a1a1a]/80" onClick={() => setIsFullscreen(false)} />
+      {/* Fullscreen portal */}
+      {mounted && isFullscreen && createPortal(
+        <div className="fixed inset-0 z-[100] bg-[#1a1a1a]/90 flex flex-col" onClick={() => setIsFullscreen(false)}>
+          <div className="flex items-center justify-end p-4">
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="flex items-center gap-2 px-4 py-2 bg-background text-foreground rounded-lg font-medium hover:bg-gold hover:text-dark-gray transition-colors"
+            >
+              <X className="w-4 h-4" />
+              {"닫기"}
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto p-4 bg-[#f5f4f0]" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src="/images/land-plot-map.jpg"
+              alt="서전주(이서)빌리지 토지 구획도"
+              width={1600}
+              height={1800}
+              className="w-full h-auto rounded-xl"
+            />
+          </div>
+        </div>,
+        document.body
       )}
     </section>
   )
