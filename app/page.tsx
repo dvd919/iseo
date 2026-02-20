@@ -2,6 +2,7 @@ import { Hero } from "@/components/sections/hero"
 import { Highlights } from "@/components/sections/highlights"
 import { Location } from "@/components/sections/location"
 import { MasterPlan } from "@/components/sections/masterplan"
+import { LandPlot } from "@/components/sections/land-plot"
 import { LandInfo } from "@/components/sections/land-info"
 import { HouseGuide } from "@/components/sections/house-guide"
 import { Nature } from "@/components/sections/nature"
@@ -18,6 +19,7 @@ export default function Page() {
       <Highlights />
       <Location />
       <MasterPlan />
+      <LandPlot />
       <LandInfo />
       <HouseGuide />
       <Nature />

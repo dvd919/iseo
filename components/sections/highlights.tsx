@@ -54,7 +54,7 @@ export function Highlights() {
           </span>
           <h2 className="text-3xl md:text-5xl font-black text-foreground leading-tight text-balance">
             {"왜 "}
-            <span className="text-primary">{"서전주(이서)빌리지"}</span>
+            <span className="text-primary">{"서전주 이서 빌리지"}</span>
             {"인가"}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
